@@ -20,12 +20,16 @@ There is no test suite configured in this repo.
 
 ## Architecture
 
-This is an unstructured single-component app: all state and logic lives in `src/App.jsx`, with no sub-components, no routing, and no backend — everything is in-memory React `useState`.
+No routing, no backend — everything is in-memory React `useState`. `src/main.jsx` mounts `<App />` into `#root` in StrictMode.
 
-- `src/main.jsx` mounts `<App />` into `#root` in StrictMode.
-- `src/App.jsx` owns everything:
-  - `transactions` state (seeded with hardcoded sample data) plus form state for a new transaction (`description`, `amount`, `type`, `category`) and filter state (`filterType`, `filterCategory`).
-  - Income/expense/balance totals are derived by `reduce`-ing over `transactions` on every render — amounts are stored and summed as **strings**, not numbers (both the seed data and the `handleSubmit` input values), so arithmetic on them is string concatenation rather than addition. This is the known intentional bug referenced in the README.
-  - Filtering is done by chaining `.filter()` on `transactions` based on the two filter selects.
-  - Everything (summary cards, add-transaction form, filters, transactions table) is rendered inline in one JSX return — there are no extracted subcomponents.
-- Styling is plain CSS in `src/App.css` / `src/index.css`, no CSS framework.
+`App.jsx` is the top-level container and owns only:
+- `transactions` state, seeded with hardcoded sample data (`amount` is a `number`).
+- the `categories` list.
+- `handleAddTransaction`, which appends a new transaction and is passed down to `TransactionForm`.
+
+It composes three child components, each owning the state relevant to its job:
+- `src/Summary.jsx` — takes `transactions` as a prop and derives `totalIncome`/`totalExpenses`/`balance` via `reduce`, rendering the three summary cards.
+- `src/TransactionForm.jsx` — owns the new-transaction form state (`description`, `amount`, `type`, `category`); on submit it builds the transaction object (converting `amount` to a `Number`) and calls `onAddTransaction` prop rather than mutating state itself.
+- `src/TransactionList.jsx` — owns the filter state (`filterType`, `filterCategory`), filters the `transactions` prop, and renders the filters UI + transactions table.
+
+Styling is plain CSS in `src/App.css` / `src/index.css`, no CSS framework.
